@@ -1,0 +1,32 @@
+﻿version: '3.8'
+
+services:
+  zimage:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zimage-app
+    ports:
+      - "15000:15000"
+    volumes:
+      # 持久化数据存储
+      - ./data:/app/data
+      # 持久化日志
+      - ./backend/logs:/app/backend/logs
+      # 模型目录（用户必须指定）
+      - :/root/.cache/huggingface
+    environment:
+      - TZ=Asia/Shanghai
+      - PYTHONUNBUFFERED=1
+      - HF_HOME=/root/.cache/huggingface
+      # 运行模式：gpu 或 cpu（默认：gpu）
+      - USE_GPU=
+    restart: unless-stopped
+    # GPU 支持（如果使用 NVIDIA GPU）
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

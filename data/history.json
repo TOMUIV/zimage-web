@@ -1,0 +1,16 @@
+{
+  "images": [
+    {
+      "id": "42367a32-27a4-4cdc-a120-4dc8b5b57dc6",
+      "filename": "20260222_185011_42367a32-27a4-4cdc-a120-4dc8b5b57dc6.png",
+      "prompt": "雪山",
+      "width": 1024,
+      "height": 1024,
+      "num_inference_steps": 9,
+      "use_gpu": true,
+      "size_bytes": 1704671,
+      "created_at": "2026-02-22 18:50:11.160304",
+      "generation_time_ms": 1019270.4679965973
+    }
+  ]
+}
