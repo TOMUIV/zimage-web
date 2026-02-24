@@ -1,13 +1,4 @@
-# Z-Image Web Interface
-
-A modern web interface based on the Z-Image-Turbo model, providing complete image generation, history management, and system monitoring features. Supports both GPU and CPU inference modes with built-in Docker deployment support.
-
-[English](#english) | [中文](#中文)
-
----
-
-<a name="中文"></a>
-## 中文
+# Z-Image Web 界面
 
 ## ✨ 特性
 
@@ -18,11 +9,47 @@ A modern web interface based on the Z-Image-Turbo model, providing complete imag
 - 🎯 **批量管理**：支持批量下载和删除历史图像
 - 🔄 **双模式**：支持 GPU 和 CPU 推理模式
 - 🐳 **Docker 支持**：一键 Docker 部署
-- 🌐 **中英文支持**：完整的中英文界面
 
 ## 🚀 快速开始
 
 ### 本地运行
+
+#### 环境准备
+
+**1. 创建 Conda 环境：**
+```bash
+# 创建名为 zimage 的 conda 环境
+conda create -n zimage python=3.10
+
+# 激活环境
+conda activate zimage
+```
+
+**2. 安装后端依赖：**
+```bash
+# 进入后端目录
+cd backend
+
+# 安装 Python 依赖
+pip install -r requirements.txt
+
+# 返回项目根目录
+cd ..
+```
+
+**3. 安装前端依赖：**
+```bash
+# 进入前端目录
+cd frontend
+
+# 安装 Node.js 依赖
+npm install
+
+# 返回项目根目录
+cd ..
+```
+
+#### 启动服务
 
 **启动完整服务（后端 + 前端）：**
 ```bash
@@ -71,15 +98,38 @@ docker run -d \
   tomuiv/zimage-web:latest
 ```
 
-**参数说明：**
+**参数说明**
 
+**必需参数：**
 - `-p 15000:15000`：映射端口，访问 http://localhost:15000
+
+**可选参数：**
 - `--gpus all`：启用 GPU 支持（仅 GPU 模式）
 - `-v $(pwd)/data:/app/data`：挂载数据目录（保存生成的图像）
 - `-v $(pwd)/backend/logs:/app/backend/logs`：挂载日志目录
 - `-v ~/.cache/huggingface:/root/.cache/huggingface`：**挂载模型文件目录（重要！）**
 - `-e USE_GPU=true`：启用 GPU 模式（true/false）
 - `-e TZ=Asia/Shanghai`：设置时区
+
+**模型文件挂载：**
+
+为了避免重复下载模型文件，建议预先下载好模型文件并挂载到容器中：
+
+- **下载模型文件：**
+```bash
+# 使用 Hugging Face CLI 下载
+pip install huggingface_hub
+huggingface-cli download Tongyi-MAI/Z-Image-Turbo --local-dir ~/.cache/huggingface/hub/models--Tongyi-MAI--Z-Image-Turbo
+```
+
+- **挂载到容器：**
+```bash
+docker run -d \
+  --name zimage-app \
+  -p 15000:15000 \
+  -v /path/to/your/models:/root/.cache/huggingface \
+  tomuiv/zimage-web:latest
+```
 
 #### 方法 2：手动构建镜像
 
@@ -99,39 +149,6 @@ docker build -t tomuiv/zimage-web:latest .
 
 # 启动容器
 docker-compose up -d
-```
-
-#### 参数说明
-
-**必需参数：**
-- `-p 15000:15000`：映射端口，访问 http://localhost:15000
-
-**可选参数：**
-- `--gpus all`：启用 GPU 支持（仅 GPU 模式）
-- `-v $(pwd)/data:/app/data`：挂载数据目录（保存生成的图像）
-- `-v $(pwd)/backend/logs:/app/backend/logs`：挂载日志目录
-- `-v ~/.cache/huggingface:/root/.cache/huggingface`：**挂载模型文件目录（重要！）**
-- `-e USE_GPU=true`：启用 GPU 模式（true/false）
-- `-e TZ=Asia/Shanghai`：设置时区
-
-**关于模型文件挂载：**
-
-为了避免重复下载模型文件，建议预先下载好模型文件并挂载到容器中：
-
-1. **下载模型文件：**
-```bash
-# 使用 Hugging Face CLI 下载
-pip install huggingface_hub
-huggingface-cli download Tongyi-MAI/Z-Image-Turbo --local-dir ~/.cache/huggingface/hub/models--Tongyi-MAI--Z-Image-Turbo
-```
-
-2. **挂载到容器：**
-```bash
-docker run -d \
-  --name zimage-app \
-  -p 15000:15000 \
-  -v /path/to/your/models:/root/.cache/huggingface \
-  tomuiv/zimage-web:latest
 ```
 
 3. **使用 Docker Compose：**
@@ -188,8 +205,8 @@ services:
 ### Docker 运行
 - Docker Desktop
 - GPU：NVIDIA 显卡（推荐 16GB+ 显存）
-- 内存：8GB+
-- 磁盘：40GB+（包含模型）
+- 内存：16GB+
+- 磁盘：40GB+
 
 ## 🎨 功能说明
 
@@ -290,10 +307,6 @@ Original License: Apache License 2.0
 
 - GitHub：https://github.com/TOMUIV/zimage-web
 - Docker Hub：https://hub.docker.com/r/tomuiv/zimage-web
-
----
-
-**Made with ❤️ by TOMUIV**
 
 ---
 
