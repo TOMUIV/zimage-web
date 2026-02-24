@@ -33,17 +33,46 @@ start_frontend.bat
 
 ### Docker 部署
 
+#### 方法 1：使用预构建镜像（推荐）
+
 **GPU 模式：**
 ```bash
-start_gpu.bat
+docker run -d \
+  --name zimage-app \
+  --gpus all \
+  -p 15000:15000 \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/backend/logs:/app/backend/logs \
+  -v ~/.cache/huggingface:/root/.cache/huggingface \
+  -e USE_GPU=true \
+  -e TZ=Asia/Shanghai \
+  --restart unless-stopped \
+  tomuiv/zimage-web:latest
 ```
 
 **CPU 模式：**
 ```bash
-start_cpu.bat
+docker run -d \
+  --name zimage-app \
+  -p 15000:15000 \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/backend/logs:/app/backend/logs \
+  -v ~/.cache/huggingface:/root/.cache/huggingface \
+  -e USE_GPU=false \
+  -e TZ=Asia/Shanghai \
+  --restart unless-stopped \
+  tomuiv/zimage-web:latest
 ```
 
-**手动运行：**
+**使用 Docker Compose（推荐）：**
+```bash
+# 修改 docker-compose.yml 中的 MODEL_PATH 指向你的模型文件目录
+docker-compose up -d
+```
+
+#### 方法 2：手动构建镜像
+
+**Windows：**
 ```bash
 # 构建镜像
 build-docker.bat
@@ -51,6 +80,79 @@ build-docker.bat
 # 启动容器
 docker-compose up -d
 ```
+
+**Linux/Mac：**
+```bash
+# 构建镜像
+docker build -t tomuiv/zimage-web:latest .
+
+# 启动容器
+docker-compose up -d
+```
+
+#### 参数说明
+
+**必需参数：**
+- `-p 15000:15000`：映射端口，访问 http://localhost:15000
+
+**可选参数：**
+- `--gpus all`：启用 GPU 支持（仅 GPU 模式）
+- `-v $(pwd)/data:/app/data`：挂载数据目录（保存生成的图像）
+- `-v $(pwd)/backend/logs:/app/backend/logs`：挂载日志目录
+- `-v ~/.cache/huggingface:/root/.cache/huggingface`：**挂载模型文件目录（重要！）**
+- `-e USE_GPU=true`：启用 GPU 模式（true/false）
+- `-e TZ=Asia/Shanghai`：设置时区
+
+**关于模型文件挂载：**
+
+为了避免重复下载模型文件，建议预先下载好模型文件并挂载到容器中：
+
+1. **下载模型文件：**
+```bash
+# 使用 Hugging Face CLI 下载
+pip install huggingface_hub
+huggingface-cli download Tongyi-MAI/Z-Image-Turbo --local-dir ~/.cache/huggingface/hub/models--Tongyi-MAI--Z-Image-Turbo
+```
+
+2. **挂载到容器：**
+```bash
+docker run -d \
+  --name zimage-app \
+  -p 15000:15000 \
+  -v /path/to/your/models:/root/.cache/huggingface \
+  tomuiv/zimage-web:latest
+```
+
+3. **使用 Docker Compose（推荐）：**
+
+修改 `docker-compose.yml`：
+```yaml
+services:
+  zimage:
+    image: tomuiv/zimage-web:latest
+    container_name: zimage-app
+    ports:
+      - "15000:15000"
+    volumes:
+      - ./data:/app/data
+      - ./backend/logs:/app/backend/logs
+      - /path/to/your/models:/root/.cache/huggingface  # 修改为你的模型路径
+    environment:
+      - TZ=Asia/Shanghai
+      - USE_GPU=true
+    restart: unless-stopped
+```
+
+**模型文件位置说明：**
+
+- **Windows**: `C:\Users\<用户名>\.cache\huggingface`
+- **Linux/Mac**: `~/.cache/huggingface`
+- **默认下载大小**: 约 12GB（首次运行会自动下载）
+
+**注意：**
+- 如果不挂载模型目录，首次运行时会自动从 Hugging Face 下载（需要访问国外网络或配置代理）
+- 挂载已有模型文件可以避免重复下载，节省时间和带宽
+- 模型文件包括 Z-Image-Turbo 及其依赖
 
 ## 📸 使用方法
 
