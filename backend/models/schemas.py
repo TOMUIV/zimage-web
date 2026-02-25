@@ -27,7 +27,7 @@ class ImageGenerationRequest(BaseModel):
     batch_size: int = Field(1, description="Number of images to generate", ge=1, le=8)
     gpu_id: int = Field(0, description="GPU device ID", ge=0, le=7)
     guidance_scale: float = Field(0.0, description="Guidance scale for CFG", ge=0.0, le=20.0)
-    max_concurrent_tasks: int = Field(1, description="Maximum concurrent tasks", ge=1, le=4)
+    max_concurrent_tasks: int = Field(1, description="Maximum concurrent tasks", ge=1, le=4, default=1)
 
 
 class ImageInfo(BaseModel):
