@@ -28,7 +28,11 @@ class TaskManager:
         width: int = 1024,
         num_inference_steps: int = 9,
         use_gpu: bool = True,
-        seed: Optional[int] = None
+        seed: Optional[int] = None,
+        batch_size: int = 1,
+        gpu_id: int = 0,
+        guidance_scale: float = 0.0,
+        max_concurrent_tasks: int = 1
     ) -> str:
         """
         Create a new image generation task.
@@ -41,6 +45,9 @@ class TaskManager:
             num_inference_steps: Number of inference steps
             use_gpu: Whether to use GPU
             seed: Random seed for reproducibility
+            batch_size: Number of images to generate
+            gpu_id: GPU device ID
+            guidance_scale: Guidance scale for CFG
 
         Returns:
             str: Task ID
@@ -62,7 +69,7 @@ class TaskManager:
         # Start task in background
         # Use ensure_future to properly schedule the coroutine
         task_coro = self._execute_task(
-            task_id, prompt, negative_prompt, height, width, num_inference_steps, use_gpu, seed
+            task_id, prompt, negative_prompt, height, width, num_inference_steps, use_gpu, seed, batch_size, gpu_id, guidance_scale, max_concurrent_tasks
         )
         # Store reference to prevent garbage collection
         self._background_task = asyncio.ensure_future(task_coro)
@@ -73,12 +80,16 @@ class TaskManager:
         self,
         task_id: str,
         prompt: str,
-        negative_prompt: Optional[str],
+        negative_prompt: Optional[str] = None,
         height: int,
         width: int,
         num_inference_steps: int,
         use_gpu: bool,
-        seed: Optional[int]
+        seed: Optional[int],
+        batch_size: int,
+        gpu_id: int,
+        guidance_scale: float,
+        max_concurrent_tasks: int = 1
     ):
         """Execute the image generation task in background."""
         try:
@@ -119,6 +130,9 @@ class TaskManager:
                     num_inference_steps=num_inference_steps,
                     use_gpu=use_gpu,
                     seed=seed,
+                    batch_size=batch_size,
+                    gpu_id=gpu_id,
+                    guidance_scale=guidance_scale,
                     progress_callback=progress_callback
                 )
             )

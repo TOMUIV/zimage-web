@@ -31,7 +31,11 @@ async def create_generation_task(request: ImageGenerationRequest):
             width=request.width,
             num_inference_steps=request.num_inference_steps,
             use_gpu=request.use_gpu,
-            seed=request.seed
+            seed=request.seed,
+            batch_size=request.batch_size,
+            gpu_id=request.gpu_id,
+            guidance_scale=request.guidance_scale,
+            max_concurrent_tasks=request.max_concurrent_tasks
         )
         return {"task_id": task_id}
     except Exception as e:

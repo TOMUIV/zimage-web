@@ -108,6 +108,9 @@ class ImageGenerator:
         num_inference_steps: int = 9,
         use_gpu: bool = True,
         seed: Optional[int] = None,
+        batch_size: int = 1,
+        gpu_id: int = 0,
+        guidance_scale: float = 0.0,
         progress_callback: Optional[Callable[[str, int], None]] = None
     ) -> ImageInfo:
         """
@@ -121,6 +124,9 @@ class ImageGenerator:
             num_inference_steps: Number of inference steps
             use_gpu: Whether to use GPU
             seed: Random seed for reproducibility
+            batch_size: Number of images to generate
+            gpu_id: GPU device ID
+            guidance_scale: Guidance scale for CFG
             progress_callback: Callback function for progress updates (message, progress_percent)
 
         Returns:
@@ -129,12 +135,20 @@ class ImageGenerator:
         # Load model if not loaded
         self._load_model(use_gpu, progress_callback)
 
+        # Set GPU device if specified
+        if use_gpu and torch.cuda.is_available():
+            device = f"cuda:{gpu_id}"
+            if progress_callback:
+                progress_callback(f"Using GPU device: {device}", 25)
+        else:
+            device = self._device
+
         if progress_callback:
             progress_callback("Starting image generation...", 30)
 
         # Generate seed if not provided
         if seed is None:
-            seed = torch.randint(0, 2**32, (1,), device=self._device).item()
+            seed = torch.randint(0, 2**32, (1,), device=device).item()
 
         # Adjust height/width for CPU mode to speed up
         if self._device == "cpu":
@@ -144,67 +158,75 @@ class ImageGenerator:
                 progress_callback(f"Adjusted resolution for CPU: {width}x{height}", 35)
 
         # Create generator
-        generator = torch.Generator(self._device).manual_seed(seed)
+        generator = torch.Generator(device).manual_seed(seed)
 
         # Start timing
         start_time = time.time()
 
-        # Generate image
+        # Generate image(s)
         try:
-            image = self._pipeline(
+            result = self._pipeline(
                 prompt=prompt,
+                negative_prompt=negative_prompt,
                 height=height,
                 width=width,
                 num_inference_steps=num_inference_steps,
-                guidance_scale=Config.DEFAULT_GUIDANCE_SCALE,
+                guidance_scale=guidance_scale,
                 generator=generator,
-            ).images[0]
+                num_images_per_prompt=batch_size,
+            ).images
 
             # Calculate generation time
             generation_time = (time.time() - start_time) * 1000  # Convert to ms
 
             if progress_callback:
-                progress_callback("Image generated successfully", 90)
+                progress_callback(f"{len(result)} image(s) generated successfully", 90)
 
         except Exception as e:
             if progress_callback:
                 progress_callback(f"Generation failed: {str(e)}", 0)
             raise RuntimeError(f"Failed to generate image: {str(e)}")
 
-        # Save image
-        image_id = str(uuid.uuid4())
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"{timestamp}_{image_id}.png"
-        image_path = Config.IMAGES_DIR / filename
+        # Save images - return the first one for compatibility
+        # For now, we save all images but only return the first one
+        # In the future, we can update the API to return multiple images
+        image_info_list = []
+        for idx, image in enumerate(result):
+            image_id = str(uuid.uuid4())
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"{timestamp}_{image_id}.png"
+            image_path = Config.IMAGES_DIR / filename
 
-        if progress_callback:
-            progress_callback("Saving image...", 95)
+            if progress_callback:
+                progress_callback(f"Saving image {idx + 1}/{len(result)}...", 90 + idx * 5 // len(result))
 
-        image.save(image_path)
+            image.save(image_path)
 
-        # Get file size
-        size_bytes = image_path.stat().st_size
+            # Get file size
+            size_bytes = image_path.stat().st_size
+
+            # Create image info
+            image_info = ImageInfo(
+                id=image_id,
+                filename=filename,
+                prompt=prompt,
+                negative_prompt=negative_prompt,
+                width=width,
+                height=height,
+                num_inference_steps=num_inference_steps,
+                use_gpu=use_gpu,
+                seed=seed,
+                size_bytes=size_bytes,
+                created_at=datetime.now(),
+                generation_time_ms=generation_time
+            )
+            image_info_list.append(image_info)
 
         if progress_callback:
             progress_callback("Complete", 100)
 
-        # Create image info
-        image_info = ImageInfo(
-            id=image_id,
-            filename=filename,
-            prompt=prompt,
-            negative_prompt=negative_prompt,
-            width=width,
-            height=height,
-            num_inference_steps=num_inference_steps,
-            use_gpu=use_gpu,
-            seed=seed,
-            size_bytes=size_bytes,
-            created_at=datetime.now(),
-            generation_time_ms=generation_time
-        )
-
-        return image_info
+        # Return the first image for now (API needs to be updated to support multiple images)
+        return image_info_list[0] if image_info_list else None
 
 
 # Global singleton instance
