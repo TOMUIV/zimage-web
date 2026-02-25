@@ -44,15 +44,6 @@ const TaskStatus = ({ taskId }) => {
     return <Alert variant="info" className="shadow-sm">加载中...</Alert>;
   }
 
-  const getStatusVariant = () => {
-    switch (status.status) {
-      case 'completed': return 'success';
-      case 'failed': return 'danger';
-      case 'processing': return 'info';
-      default: return 'secondary';
-    }
-  };
-
   const getStatusText = () => {
     switch (status.status) {
       case 'pending': return '⏳ 等待中';

@@ -13,7 +13,6 @@ const GenerateForm = ({ onTaskCreated }) => {
   const [seed, setSeed] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showAdvanced, setShowAdvanced] = useState(false);
   
   // 高级设置状态
   const [useGPU, setUseGPU] = useState(true);
@@ -238,7 +237,7 @@ const GenerateForm = ({ onTaskCreated }) => {
                   <small>
                     ⚠️ <strong>注意：</strong>
                     <ul className="mb-0 mt-2">
-                      <li>批量大小 > 1 需要 2 倍以上的显存</li>
+                      <li>批量大小 大于 1 需要 2 倍以上的显存</li>
                       <li>GPU 模式推荐使用引导系数 0.0（Turbo 模型特性）</li>
                       <li>CPU 模式建议批量大小设为 1</li>
                       <li>并发任务过多可能导致显存不足</li>

@@ -80,16 +80,16 @@ class TaskManager:
         self,
         task_id: str,
         prompt: str,
-        negative_prompt: Optional[str] = None,
         height: int,
         width: int,
         num_inference_steps: int,
         use_gpu: bool,
-        seed: Optional[int],
         batch_size: int,
         gpu_id: int,
         guidance_scale: float,
-        max_concurrent_tasks: int = 1
+        max_concurrent_tasks: int,
+        negative_prompt: Optional[str] = None,
+        seed: Optional[int] = None
     ):
         """Execute the image generation task in background."""
         try:
